@@ -345,9 +345,20 @@ function saml_sls() {
 		setcookie('saml_nameid', null, time() - 3600, SITECOOKIEPATH );
 		setcookie('saml_sessionindex', null, time() - 3600, SITECOOKIEPATH );
 		if (get_option('onelogin_saml_advanced_settings_use_server_sessions')) {
-			delete_user_meta($user_id, 'saml_sessionindex');
-			delete_user_meta($user_id, 'saml_nameid');
-			delete_user_meta($user_id, 'saml_login_time');
+			$logintime = get_user_meta($user_id, 'saml_login_time', true);
+			if (time() - $logintime >= YEAR_IN_SECONDS ) {
+				delete_user_meta($user_id, 'saml_sessionindex');
+				delete_user_meta($user_id, 'saml_nameid');
+				delete_user_meta($user_id, 'saml_login_time');
+			} elseif (isset($_COOKIE['saml_nameid']) && isset($_COOKIE['saml_sessionindex'])) {
+				$session = get_user_meta($user_id, 'saml_sessionindex', true);
+				$nameid = get_user_meta($user_id, 'saml_nameid', true);
+				if ($_COOKIE['saml_nameid']===$nameid && $_COOKIE['saml_sessionindex']===$session) {
+					delete_user_meta($user_id, 'saml_sessionindex');
+					delete_user_meta($user_id, 'saml_nameid');
+					delete_user_meta($user_id, 'saml_login_time');
+				}
+			}
 		}
 
 		if (get_option('onelogin_saml_forcelogin') && get_option('onelogin_saml_customize_stay_in_wordpress_after_slo')) {
